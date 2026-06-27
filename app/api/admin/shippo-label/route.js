@@ -12,10 +12,7 @@ export async function POST(req) {
     }
 
     if (!paymentId || !rateId) {
-      return NextResponse.json(
-        { error: "paymentId and rateId are required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "paymentId and rateId are required." }, { status: 400 });
     }
 
     const response = await fetch(`${SHIPPO_API_URL}/transactions/`, {
@@ -36,13 +33,13 @@ export async function POST(req) {
     if (!response.ok || transaction.object_status !== "SUCCESS") {
       return NextResponse.json(
         { error: "Shippo could not purchase the label.", details: transaction },
-        { status: response.status || 500 }
+        { status: 500 }
       );
     }
 
     const supabase = getSupabaseAdmin();
 
-    await supabase
+    const { error } = await supabase
       .from("payments")
       .update({
         shippo_transaction_id: transaction.object_id,
@@ -50,25 +47,23 @@ export async function POST(req) {
         tracking_number: transaction.tracking_number,
         tracking_url: transaction.tracking_url_provider,
         carrier: transaction.rate?.provider || transaction.carrier || null,
-        service_level:
-          transaction.rate?.servicelevel?.name ||
-          transaction.servicelevel_name ||
-          null,
+        service_level: transaction.rate?.servicelevel?.name || transaction.servicelevel_name || null,
         package_weight: packageWeight || null,
       })
       .eq("id", paymentId);
 
+    if (error) {
+      return NextResponse.json(
+        { error: "Label created, but Supabase did not save it.", details: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      transactionId: transaction.object_id,
       labelUrl: transaction.label_url,
       trackingNumber: transaction.tracking_number,
       trackingUrl: transaction.tracking_url_provider,
-      carrier: transaction.rate?.provider || transaction.carrier || null,
-      serviceLevel:
-        transaction.rate?.servicelevel?.name ||
-        transaction.servicelevel_name ||
-        null,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
