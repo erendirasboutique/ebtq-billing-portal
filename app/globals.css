@@ -10,7 +10,7 @@
 
 @font-face {
   font-family: "MDNichromeBold";
-  src: url("/fonts/MDNichrome-Bold.otf") format("woff2"),
+  src: url("/fonts/MDNichrome-Bold.otf") format("otf"),
        url("/fonts/MDNichrome-Bold.woff") format("woff"),
        url("/fonts/MDNichrome-Bold.ttf") format("truetype");
   font-weight: 700;
