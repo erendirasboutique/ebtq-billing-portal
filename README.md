@@ -131,3 +131,17 @@ Font files are not included. Add your licensed font files here:
 - `public/fonts/MDNichrome-Bold.woff2`
 
 The CSS already points to those filenames.
+
+## Polished UI update
+
+This version updates the billing portal UI with:
+
+- Customer welcome message using the saved Stripe customer name
+- California time formatting for payment dates
+- Professional customer payment cards
+- Professional admin dashboard cards instead of a plain table
+- Print Payment History button in the admin portal
+- Cleaner admin notes section inside each expanded payment card
+- Improved mobile layout and print stylesheet
+
+After uploading to GitHub, redeploy on Vercel. Keep your existing Vercel environment variables and Supabase tables.

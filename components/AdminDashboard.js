@@ -71,7 +71,6 @@ export default function AdminDashboard({ payments, admin }) {
   const [expandedId, setExpandedId] = useState(null);
   const [notes, setNotes] = useState({});
   const [noteStatus, setNoteStatus] = useState('');
-
   const t = copy[lang];
 
   const filtered = useMemo(() => {
@@ -81,14 +80,10 @@ export default function AdminDashboard({ payments, admin }) {
       const haystack = JSON.stringify(payment).toLowerCase();
       const matchesQuery = !query || haystack.includes(query);
       const matchesStatus =
-        status === 'all' ||
-        payment.payment_status === status ||
-        payment.refund_status === status;
-
+        status === 'all' || payment.payment_status === status || payment.refund_status === status;
       const date = payment.created_at ? new Date(payment.created_at) : null;
       const afterFrom = !fromDate || (date && date >= new Date(`${fromDate}T00:00:00`));
       const beforeTo = !toDate || (date && date <= new Date(`${toDate}T23:59:59`));
-
       return matchesQuery && matchesStatus && afterFrom && beforeTo;
     });
   }, [payments, q, status, fromDate, toDate]);
@@ -97,19 +92,14 @@ export default function AdminDashboard({ payments, admin }) {
   const allTimeTotal = payments.reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
   const paid = filtered.filter((p) => p.payment_status === 'paid').length;
   const customers = new Set(filtered.map((p) => p.customer_email).filter(Boolean)).size;
-
-  const latest = payments[0]?.created_at
-    ? formatPaymentDate(payments[0].created_at)
-    : '—';
+  const latest = payments[0]?.created_at ? formatPaymentDate(payments[0].created_at) : '—';
 
   const customerTotals = useMemo(() => {
     const map = new Map();
-
     for (const payment of payments) {
       const email = payment.customer_email || 'unknown';
       map.set(email, (map.get(email) || 0) + Number(payment.amount_total || 0));
     }
-
     return map;
   }, [payments]);
 
@@ -152,26 +142,19 @@ export default function AdminDashboard({ payments, admin }) {
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-
     a.href = url;
     a.download = 'erendiras-all-time-payments.csv';
     a.click();
-
     URL.revokeObjectURL(url);
   }
 
   async function saveNote(paymentId) {
     setNoteStatus('Saving...');
-
     const res = await fetch('/api/admin/payment-notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: paymentId,
-        admin_notes: notes[paymentId] || '',
-      }),
+      body: JSON.stringify({ id: paymentId, admin_notes: notes[paymentId] || '' }),
     });
-
     setNoteStatus(res.ok ? 'Saved.' : 'Could not save note.');
     setTimeout(() => setNoteStatus(''), 2000);
   }
@@ -182,274 +165,103 @@ export default function AdminDashboard({ payments, admin }) {
   }
 
   return (
-    <main className="page">
-      <div className="shell split">
+    <main className="page adminPage">
+      <span className="flower one no-print">✿</span>
+      <span className="flower two no-print">❀</span>
+      <div className="shell split adminShell">
         <aside className="card sidebar no-print">
           <img src="/logo.png" className="logo" alt="Erendira's Boutique" />
-          <h2>Admin</h2>
+          <h2>Admin Studio</h2>
           <p>{admin?.email}</p>
-          <p>
-            <span className="pill">{admin?.role}</span>
-          </p>
-
+          <p><span className="pill rolePill">{admin?.role}</span></p>
           <div className="side-links">
-            <a className="button secondary" href="/admin">
-              {t.dashboard}
-            </a>
-            <button className="button ghost" onClick={logout}>
-              {t.logout}
-            </button>
+            <a className="button secondary" href="/admin">{t.dashboard}</a>
+            <button className="button ghost" onClick={logout}>{t.logout}</button>
           </div>
         </aside>
 
-        <section>
-          <div className="topbar no-print">
+        <section className="adminContent">
+          <div className="adminHero no-print">
             <div>
+              <p className="eyebrow">Erendira&apos;s Boutique Billing</p>
               <h1>{t.paymentsDashboard}</h1>
-              <p>All-time billing history for Erendira&apos;s Boutique.</p>
+              <p>Review every Stripe payment, customer detail, receipt, shipping address, and private admin note in one polished dashboard.</p>
             </div>
             <LanguageToggle lang={lang} setLang={setLang} />
           </div>
 
-          <div className="grid">
-            <div className="stat">
-              Filtered Revenue<b>${total.toFixed(2)}</b>
-            </div>
-            <div className="stat">
-              All-Time Revenue<b>${allTimeTotal.toFixed(2)}</b>
-            </div>
-            <div className="stat">
-              Paid Orders<b>{paid}</b>
-            </div>
-            <div className="stat">
-              Customers<b>{customers}</b>
-            </div>
-            <div className="stat">
-              Total Payments<b>{payments.length}</b>
-            </div>
-            <div className="stat">
-              Latest Payment<b>{latest}</b>
-            </div>
+          <div className="statsGrid print-keep">
+            <div className="stat highlight"><span>Filtered Revenue</span><b>{money(total)}</b></div>
+            <div className="stat"><span>All-Time Revenue</span><b>{money(allTimeTotal)}</b></div>
+            <div className="stat"><span>Paid Orders</span><b>{paid}</b></div>
+            <div className="stat"><span>Customers</span><b>{customers}</b></div>
+            <div className="stat"><span>Total Payments</span><b>{payments.length}</b></div>
+            <div className="stat"><span>Latest Payment</span><b>{latest}</b></div>
           </div>
 
-          <div className="card" style={{ marginTop: 18 }}>
+          <div className="card dashboardCard">
             <div className="filters no-print">
-              <input
-                className="input"
-                placeholder={t.search}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-
-              <select
-                className="input"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
+              <input className="input" placeholder={t.search} value={q} onChange={(e) => setQ(e.target.value)} />
+              <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="all">All statuses</option>
                 <option value="paid">Paid</option>
                 <option value="unpaid">Unpaid</option>
                 <option value="none">No refund</option>
                 <option value="refunded">Refunded</option>
               </select>
-
-              <input
-                className="input"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-
-              <input
-                className="input"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-
-              <button className="button secondary" onClick={exportCsv}>
-                {t.export}
-              </button>
-
-              <button className="button secondary" onClick={() => window.print()}>
-                🖨 Print Payment History
-              </button>
+              <input className="input" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              <input className="input" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              <button className="button secondary" onClick={exportCsv}>{t.export}</button>
+              <button className="button ghost" onClick={() => window.print()}>🖨 Print</button>
             </div>
 
             {noteStatus && <div className="notice no-print">{noteStatus}</div>}
 
-            <div className="tablewrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Email / Phone</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Payment Method</th>
-                    <th>Receipt</th>
-                    <th className="no-print">Details</th>
-                  </tr>
-                </thead>
+            <div className="paymentList adminPaymentList">
+              {filtered.map((p) => (
+                <Fragment key={p.id || p.stripe_session_id}>
+                  <article className="paymentCard adminPaymentCard">
+                    <div className="paymentHeader">
+                      <div>
+                        <p className="eyebrow">{formatPaymentDate(p.created_at)}</p>
+                        <h3>{p.customer_name || 'Customer'}</h3>
+                        <p>{p.customer_email || '—'} {p.customer_phone ? `• ${p.customer_phone}` : ''}</p>
+                      </div>
+                      <div className="amountBlock">
+                        <b>{money(p.amount_total, p.currency)}</b>
+                        <span className="pill">{p.payment_status || '—'}</span>
+                      </div>
+                    </div>
 
-                <tbody>
-                  {filtered.map((p) => (
-                    <Fragment key={p.id || p.stripe_session_id}>
-                      <tr>
-                        <td>{formatPaymentDate(p.created_at)}</td>
-                        <td>{p.customer_name || '—'}</td>
-                        <td>
-                          {p.customer_email || '—'}
-                          <br />
-                          <small>{p.customer_phone || ''}</small>
-                        </td>
-                        <td>{money(p.amount_total, p.currency)}</td>
-                        <td>
-                          <span className="pill">{p.payment_status || '—'}</span>
-                          <br />
-                          <small>Refund: {p.refund_status || 'none'}</small>
-                        </td>
-                        <td>{paymentMethodLabel(p)}</td>
-                        <td>
-                          {p.receipt_url ? (
-                            <a href={p.receipt_url} target="_blank">
-                              Open
-                            </a>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td className="no-print">
-                          <button
-                            className="button ghost mini"
-                            onClick={() =>
-                              setExpandedId(expandedId === p.id ? null : p.id)
-                            }
-                          >
-                            {expandedId === p.id ? 'Hide' : 'View'}
-                          </button>
-                        </td>
-                      </tr>
+                    <div className="quickDetails">
+                      <div><b>Payment Method</b><p>{paymentMethodLabel(p)}</p></div>
+                      <div><b>Refund</b><p>{p.refund_status || 'none'}</p></div>
+                      <div><b>Lifetime Spend</b><p>{money(customerTotals.get(p.customer_email || 'unknown') || 0, p.currency)}</p></div>
+                      <div><b>Receipt</b><p>{p.receipt_url ? <a href={p.receipt_url} target="_blank">Open Receipt</a> : '—'}</p></div>
+                    </div>
 
-                      {expandedId === p.id && (
-                        <tr className="no-print">
-                          <td colSpan="8">
-                            <div className="detailsGrid">
-                              <div>
-                                <b>Shipping Address</b>
-                                <p>{formatAddress(p.shipping_address)}</p>
-                              </div>
+                    <div className="cardActions no-print">
+                      <button className="button ghost mini" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
+                        {expandedId === p.id ? 'Hide Details' : 'View Details'}
+                      </button>
+                    </div>
+                  </article>
 
-                              <div>
-                                <b>Billing Address</b>
-                                <p>{formatAddress(p.billing_address)}</p>
-                              </div>
-
-                              <div>
-                                <b>Customer Lifetime Total</b>
-                                <p>
-                                  $
-                                  {Number(
-                                    customerTotals.get(p.customer_email || 'unknown') || 0
-                                  ).toFixed(2)}
-                                </p>
-                              </div>
-
-                              <div>
-                                <b>Description / Order</b>
-                                <p>{p.description || '—'}</p>
-                              </div>
-
-                              <div>
-                                <b>Stripe IDs</b>
-                                <p>
-                                  Session: {p.stripe_session_id || '—'}
-                                  <br />
-                                  Payment: {p.stripe_payment_intent || '—'}
-                                  <br />
-                                  Customer: {p.stripe_customer_id || '—'}
-                                  <br />
-                                  Payment Link: {p.payment_link || '—'}
-                                </p>
-                              </div>
-
-                              <div>
-                                <b>Open in Stripe</b>
-                                <p className="linkList">
-                                  {p.stripe_customer_id && (
-                                    <a
-                                      target="_blank"
-                                      href={stripeUrl('customer', p.stripe_customer_id)}
-                                    >
-                                      Customer
-                                    </a>
-                                  )}
-                                  {p.stripe_payment_intent && (
-                                    <a
-                                      target="_blank"
-                                      href={stripeUrl(
-                                        'payment',
-                                        p.stripe_payment_intent
-                                      )}
-                                    >
-                                      Payment
-                                    </a>
-                                  )}
-                                  {p.stripe_session_id && (
-                                    <a
-                                      target="_blank"
-                                      href={stripeUrl('session', p.stripe_session_id)}
-                                    >
-                                      Checkout
-                                    </a>
-                                  )}
-                                  {p.payment_link && (
-                                    <a
-                                      target="_blank"
-                                      href={stripeUrl('link', p.payment_link)}
-                                    >
-                                      Payment Link
-                                    </a>
-                                  )}
-                                </p>
-                              </div>
-
-                              <div className="notesBox">
-                                <b>Admin Notes</b>
-                                <textarea
-                                  className="input"
-                                  rows="3"
-                                  value={notes[p.id] ?? p.admin_notes ?? ''}
-                                  onChange={(e) =>
-                                    setNotes({
-                                      ...notes,
-                                      [p.id]: e.target.value,
-                                    })
-                                  }
-                                  placeholder="Add private boutique notes..."
-                                />
-                                <button
-                                  className="button secondary mini"
-                                  onClick={() => saveNote(p.id)}
-                                >
-                                  Save Note
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  ))}
-
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan="8">No payments match these filters.</td>
-                    </tr>
+                  {expandedId === p.id && (
+                    <article className="paymentCard expandedCard no-print">
+                      <div className="detailsGrid">
+                        <div><b>Shipping Address</b><p>{formatAddress(p.shipping_address)}</p></div>
+                        <div><b>Billing Address</b><p>{formatAddress(p.billing_address)}</p></div>
+                        <div><b>Description / Order</b><p>{p.description || '—'}</p></div>
+                        <div><b>Stripe IDs</b><p>Session: {p.stripe_session_id || '—'}<br />Payment: {p.stripe_payment_intent || '—'}<br />Customer: {p.stripe_customer_id || '—'}<br />Payment Link: {p.payment_link || '—'}</p></div>
+                        <div><b>Open in Stripe</b><p className="linkList">{p.stripe_customer_id && <a target="_blank" href={stripeUrl('customer', p.stripe_customer_id)}>Customer</a>}{p.stripe_payment_intent && <a target="_blank" href={stripeUrl('payment', p.stripe_payment_intent)}>Payment</a>}{p.stripe_session_id && <a target="_blank" href={stripeUrl('session', p.stripe_session_id)}>Checkout</a>}{p.payment_link && <a target="_blank" href={stripeUrl('link', p.payment_link)}>Payment Link</a>}</p></div>
+                        <div className="notesBox"><b>Private Admin Notes</b><textarea className="input" rows="4" value={notes[p.id] ?? p.admin_notes ?? ''} onChange={(e) => setNotes({ ...notes, [p.id]: e.target.value })} placeholder="Add private boutique notes..." /><button className="button secondary mini" onClick={() => saveNote(p.id)}>Save Note</button></div>
+                      </div>
+                    </article>
                   )}
-                </tbody>
-              </table>
+                </Fragment>
+              ))}
+              {filtered.length === 0 && <div className="emptyState">No payments match these filters.</div>}
             </div>
           </div>
         </section>
