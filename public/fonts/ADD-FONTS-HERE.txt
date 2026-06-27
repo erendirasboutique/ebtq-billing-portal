@@ -1,0 +1,13 @@
+Put your font files here.
+
+Supported names already coded in app/globals.css:
+
+1. MDNichrome-Bold.woff2
+   or MDNichrome-Bold.woff
+   or MDNichrome-Bold.ttf
+
+2. BringBoldNineties.woff2
+   or BringBoldNineties.woff
+   or BringBoldNineties.ttf
+
+Do not rename the files unless you also update app/globals.css.
