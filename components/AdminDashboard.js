@@ -251,9 +251,7 @@ export default function AdminDashboard({ payments, admin }) {
                     <article className="paymentCard expandedCard no-print">
                       <div className="detailsGrid">
                         <div><b>Shipping Address</b><p>{formatAddress(p.shipping_address)}</p></div>
-                        <div><b>Billing Address</b><p>{formatAddress(p.billing_address)}</p></div>
                         <div><b>Description / Order</b><p>{p.description || '—'}</p></div>
-                        <div><b>Stripe IDs</b><p>Session: {p.stripe_session_id || '—'}<br />Payment: {p.stripe_payment_intent || '—'}<br />Customer: {p.stripe_customer_id || '—'}<br />Payment Link: {p.payment_link || '—'}</p></div>
                         <div><b>Open in Stripe</b><p className="linkList">{p.stripe_customer_id && <a target="_blank" href={stripeUrl('customer', p.stripe_customer_id)}>Customer</a>}{p.stripe_payment_intent && <a target="_blank" href={stripeUrl('payment', p.stripe_payment_intent)}>Payment</a>}{p.stripe_session_id && <a target="_blank" href={stripeUrl('session', p.stripe_session_id)}>Checkout</a>}{p.payment_link && <a target="_blank" href={stripeUrl('link', p.payment_link)}>Payment Link</a>}</p></div>
                         <div className="notesBox"><b>Private Admin Notes</b><textarea className="input" rows="4" value={notes[p.id] ?? p.admin_notes ?? ''} onChange={(e) => setNotes({ ...notes, [p.id]: e.target.value })} placeholder="Add private boutique notes..." /><button className="button secondary mini" onClick={() => saveNote(p.id)}>Save Note</button></div>
                       </div>
