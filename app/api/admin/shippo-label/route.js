@@ -21,11 +21,11 @@ export async function POST(req) {
         Authorization: `ShippoToken ${process.env.SHIPPO_API_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        rate: rateId,
-        label_file_type: "PDF",
-        async: false,
-      }),
+    body: JSON.stringify({
+  rate: rateId,
+  label_file_type: process.env.SHIPPO_LABEL_FORMAT || "PDF_4X6",
+  async: false,
+}),
     });
 
     const transaction = await response.json();
