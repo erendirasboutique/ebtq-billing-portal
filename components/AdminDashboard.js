@@ -71,6 +71,9 @@ export default function AdminDashboard({ payments, admin }) {
   const [expandedId, setExpandedId] = useState(null);
   const [notes, setNotes] = useState({});
   const [noteStatus, setNoteStatus] = useState('');
+  const [weights, setWeights] = useState({});
+  const [shippoRates, setShippoRates] = useState({});
+  const [shippoStatus, setShippoStatus] = useState('');
   const t = copy[lang];
  
   const filtered = useMemo(() => {
@@ -158,6 +161,76 @@ export default function AdminDashboard({ payments, admin }) {
     setNoteStatus(res.ok ? 'Saved.' : 'Could not save note.');
     setTimeout(() => setNoteStatus(''), 2000);
   }
+
+  async function getShippingRates(payment) {
+    setShippoStatus('Getting shipping rates...');
+
+    const weight = weights[payment.id];
+
+    if (!weight || Number(weight) <= 0) {
+      setShippoStatus('Enter a package weight first.');
+      setTimeout(() => setShippoStatus(''), 2500);
+      return;
+    }
+
+    const res = await fetch('/api/admin/shippo-rates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentId: payment.id,
+        shippingAddress: payment.shipping_address,
+        customerName: payment.customer_name,
+        customerEmail: payment.customer_email,
+        customerPhone: payment.customer_phone,
+        weight,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setShippoStatus(data.error || 'Could not get shipping rates.');
+      setTimeout(() => setShippoStatus(''), 4000);
+      return;
+    }
+
+    setShippoRates({
+      ...shippoRates,
+      [payment.id]: data.rates || [],
+    });
+
+    setShippoStatus('Shipping rates loaded.');
+    setTimeout(() => setShippoStatus(''), 2500);
+  }
+
+  async function buyShippingLabel(payment, rateId) {
+    setShippoStatus('Buying shipping label...');
+
+    const res = await fetch('/api/admin/shippo-label', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentId: payment.id,
+        rateId,
+        packageWeight: weights[payment.id],
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setShippoStatus(data.error || 'Could not buy shipping label.');
+      setTimeout(() => setShippoStatus(''), 4000);
+      return;
+    }
+
+    setShippoStatus('Shipping label created. Refresh the page to see it saved.');
+    setTimeout(() => setShippoStatus(''), 4000);
+
+    if (data.labelUrl) {
+      window.open(data.labelUrl, '_blank');
+    }
+  }
  
   async function logout() {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -214,20 +287,9 @@ export default function AdminDashboard({ payments, admin }) {
               <button className="button secondary" onClick={exportCsv}>{t.export}</button>
               <button className="button ghost" onClick={() => window.print()}>🖨 Print</button>
             </div>
- <div className="detailCard">
-  <span className="detailLabel">📦 Shipping Label</span>
 
-  {p.label_url ? (
-    <p>
-      <a href={p.label_url} target="_blank">Print Label</a>
-      <br />
-      Tracking: {p.tracking_number || "—"}
-    </p>
-  ) : (
-    <p>No label created yet.</p>
-  )}
-</div>
             {noteStatus && <div className="notice no-print">{noteStatus}</div>}
+            {shippoStatus && <div className="notice no-print">{shippoStatus}</div>}
  
             <div className="paymentList adminPaymentList">
               {filtered.map((p) => (
@@ -268,6 +330,77 @@ export default function AdminDashboard({ payments, admin }) {
                         </div>
  
                         <div className="detailCard">
+                          <span className="detailLabel">🏷 Shipping Label</span>
+
+                          {p.label_url ? (
+                            <p>
+                              <a href={p.label_url} target="_blank" rel="noopener noreferrer">
+                                Print Label
+                              </a>
+                              <br />
+                              Tracking: {p.tracking_number || '—'}
+                              <br />
+                              {p.tracking_url && (
+                                <a href={p.tracking_url} target="_blank" rel="noopener noreferrer">
+                                  Track Package
+                                </a>
+                              )}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="mutedText">Package size: 13 × 10 × 10 in</p>
+
+                              <input
+                                className="input"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                placeholder="Weight in lbs"
+                                value={weights[p.id] || ''}
+                                onChange={(e) =>
+                                  setWeights({
+                                    ...weights,
+                                    [p.id]: e.target.value,
+                                  })
+                                }
+                              />
+
+                              <button
+                                className="button secondary mini"
+                                onClick={() => getShippingRates(p)}
+                              >
+                                Get Rates
+                              </button>
+
+                              {shippoRates[p.id]?.length > 0 && (
+                                <div className="rateList">
+                                  {shippoRates[p.id].map((rate) => (
+                                    <div className="rateCard" key={rate.object_id}>
+                                      <p>
+                                        <b>{rate.provider}</b>
+                                        <br />
+                                        {rate.servicelevel?.name || rate.servicelevel_name || 'Shipping Service'}
+                                        <br />
+                                        ${rate.amount} {rate.currency}
+                                        <br />
+                                        Estimated: {rate.estimated_days || '—'} days
+                                      </p>
+
+                                      <button
+                                        className="button ghost mini"
+                                        onClick={() => buyShippingLabel(p, rate.object_id)}
+                                      >
+                                        Buy Label
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+ 
+                        <div className="detailCard">
                           <span className="detailLabel">🛍 Order Description</span>
                           <p>{p.description || 'No description available.'}</p>
                         </div>
@@ -282,22 +415,22 @@ export default function AdminDashboard({ payments, admin }) {
                           <span className="detailLabel">🔗 Open in Stripe</span>
                           <div className="stripeButtons">
                             {p.stripe_customer_id && (
-                              <a className="miniButton" target="_blank" href={stripeUrl('customer', p.stripe_customer_id)}>
+                              <a className="miniButton" target="_blank" rel="noopener noreferrer" href={stripeUrl('customer', p.stripe_customer_id)}>
                                 Customer
                               </a>
                             )}
                             {p.stripe_payment_intent && (
-                              <a className="miniButton" target="_blank" href={stripeUrl('payment', p.stripe_payment_intent)}>
+                              <a className="miniButton" target="_blank" rel="noopener noreferrer" href={stripeUrl('payment', p.stripe_payment_intent)}>
                                 Payment
                               </a>
                             )}
                             {p.payment_link && (
-                              <a className="miniButton" target="_blank" href={stripeUrl('link', p.payment_link)}>
+                              <a className="miniButton" target="_blank" rel="noopener noreferrer" href={stripeUrl('link', p.payment_link)}>
                                 Payment Link
                               </a>
                             )}
                             {p.receipt_url && (
-                              <a className="miniButton" target="_blank" href={p.receipt_url}>
+                              <a className="miniButton" target="_blank" rel="noopener noreferrer" href={p.receipt_url}>
                                 Receipt
                               </a>
                             )}
