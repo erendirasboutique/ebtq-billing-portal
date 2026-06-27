@@ -1,16 +1,16 @@
 'use client';
-
+ 
 import { Fragment, useMemo, useState } from 'react';
 import { copy } from '@/lib/i18n';
 import LanguageToggle from './LanguageToggle';
-
+ 
 function money(value, currency = 'usd') {
   return `$${Number(value || 0).toFixed(2)} ${String(currency || 'usd').toUpperCase()}`;
 }
-
+ 
 function formatPaymentDate(date) {
   if (!date) return '—';
-
+ 
   return new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles',
     month: 'short',
@@ -21,24 +21,24 @@ function formatPaymentDate(date) {
     hour12: true,
   }).format(new Date(date));
 }
-
+ 
 function formatAddress(address) {
   if (!address) return '—';
   if (typeof address === 'string') return address || '—';
-
+ 
   const parts = [
     address.line1,
     address.line2,
     [address.city, address.state, address.postal_code].filter(Boolean).join(', '),
     address.country,
   ].filter(Boolean);
-
+ 
   return parts.length ? parts.join(' • ') : '—';
 }
-
+ 
 function paymentMethodLabel(payment) {
   if (!payment.payment_method) return '—';
-
+ 
   const type = payment.payment_method.replaceAll('_', ' ');
   const card =
     payment.payment_method_brand || payment.payment_method_last4
@@ -49,10 +49,10 @@ function paymentMethodLabel(payment) {
           .filter(Boolean)
           .join(' ')})`
       : '';
-
+ 
   return `${type}${card}`;
 }
-
+ 
 function stripeUrl(kind, id) {
   if (!id) return '';
   if (kind === 'customer') return `https://dashboard.stripe.com/customers/${id}`;
@@ -61,7 +61,7 @@ function stripeUrl(kind, id) {
   if (kind === 'link') return `https://dashboard.stripe.com/payment-links/${id}`;
   return '';
 }
-
+ 
 export default function AdminDashboard({ payments, admin }) {
   const [lang, setLang] = useState(admin?.language || 'en');
   const [q, setQ] = useState('');
@@ -72,10 +72,10 @@ export default function AdminDashboard({ payments, admin }) {
   const [notes, setNotes] = useState({});
   const [noteStatus, setNoteStatus] = useState('');
   const t = copy[lang];
-
+ 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-
+ 
     return payments.filter((payment) => {
       const haystack = JSON.stringify(payment).toLowerCase();
       const matchesQuery = !query || haystack.includes(query);
@@ -87,13 +87,13 @@ export default function AdminDashboard({ payments, admin }) {
       return matchesQuery && matchesStatus && afterFrom && beforeTo;
     });
   }, [payments, q, status, fromDate, toDate]);
-
+ 
   const total = filtered.reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
   const allTimeTotal = payments.reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
   const paid = filtered.filter((p) => p.payment_status === 'paid').length;
   const customers = new Set(filtered.map((p) => p.customer_email).filter(Boolean)).size;
   const latest = payments[0]?.created_at ? formatPaymentDate(payments[0].created_at) : '—';
-
+ 
   const customerTotals = useMemo(() => {
     const map = new Map();
     for (const payment of payments) {
@@ -102,7 +102,7 @@ export default function AdminDashboard({ payments, admin }) {
     }
     return map;
   }, [payments]);
-
+ 
   function exportCsv() {
     const headers = [
       'created_at',
@@ -126,7 +126,7 @@ export default function AdminDashboard({ payments, admin }) {
       'payment_link',
       'admin_notes',
     ];
-
+ 
     const rows = [
       headers.join(','),
       ...filtered.map((p) =>
@@ -138,7 +138,7 @@ export default function AdminDashboard({ payments, admin }) {
           .join(',')
       ),
     ];
-
+ 
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -147,7 +147,7 @@ export default function AdminDashboard({ payments, admin }) {
     a.click();
     URL.revokeObjectURL(url);
   }
-
+ 
   async function saveNote(paymentId) {
     setNoteStatus('Saving...');
     const res = await fetch('/api/admin/payment-notes', {
@@ -158,12 +158,12 @@ export default function AdminDashboard({ payments, admin }) {
     setNoteStatus(res.ok ? 'Saved.' : 'Could not save note.');
     setTimeout(() => setNoteStatus(''), 2000);
   }
-
+ 
   async function logout() {
     await fetch('/api/admin/logout', { method: 'POST' });
     window.location.href = '/admin/login';
   }
-
+ 
   return (
     <main className="page adminPage">
       <span className="flower one no-print">✿</span>
@@ -179,7 +179,7 @@ export default function AdminDashboard({ payments, admin }) {
             <button className="button ghost" onClick={logout}>{t.logout}</button>
           </div>
         </aside>
-
+ 
         <section className="adminContent">
           <div className="adminHero no-print">
             <div>
@@ -189,7 +189,7 @@ export default function AdminDashboard({ payments, admin }) {
             </div>
             <LanguageToggle lang={lang} setLang={setLang} />
           </div>
-
+ 
           <div className="statsGrid print-keep">
             <div className="stat highlight"><span>Filtered Revenue</span><b>{money(total)}</b></div>
             <div className="stat"><span>All-Time Revenue</span><b>{money(allTimeTotal)}</b></div>
@@ -198,7 +198,7 @@ export default function AdminDashboard({ payments, admin }) {
             <div className="stat"><span>Total Payments</span><b>{payments.length}</b></div>
             <div className="stat"><span>Latest Payment</span><b>{latest}</b></div>
           </div>
-
+ 
           <div className="card dashboardCard">
             <div className="filters no-print">
               <input className="input" placeholder={t.search} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -214,9 +214,9 @@ export default function AdminDashboard({ payments, admin }) {
               <button className="button secondary" onClick={exportCsv}>{t.export}</button>
               <button className="button ghost" onClick={() => window.print()}>🖨 Print</button>
             </div>
-
+ 
             {noteStatus && <div className="notice no-print">{noteStatus}</div>}
-
+ 
             <div className="paymentList adminPaymentList">
               {filtered.map((p) => (
                 <Fragment key={p.id || p.stripe_session_id}>
@@ -232,28 +232,79 @@ export default function AdminDashboard({ payments, admin }) {
                         <span className="pill">{p.payment_status || '—'}</span>
                       </div>
                     </div>
-
+ 
                     <div className="quickDetails">
                       <div><b>Payment Method</b><p>{paymentMethodLabel(p)}</p></div>
                       <div><b>Refund</b><p>{p.refund_status || 'none'}</p></div>
                       <div><b>Lifetime Spend</b><p>{money(customerTotals.get(p.customer_email || 'unknown') || 0, p.currency)}</p></div>
                       <div><b>Receipt</b><p>{p.receipt_url ? <a href={p.receipt_url} target="_blank">Open Receipt</a> : '—'}</p></div>
                     </div>
-
+ 
                     <div className="cardActions no-print">
                       <button className="button ghost mini" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                         {expandedId === p.id ? 'Hide Details' : 'View Details'}
                       </button>
                     </div>
                   </article>
-
+ 
                   {expandedId === p.id && (
                     <article className="paymentCard expandedCard no-print">
-                      <div className="detailsGrid">
-                        <div><b>Shipping Address</b><p>{formatAddress(p.shipping_address)}</p></div>
-                        <div><b>Description / Order</b><p>{p.description || '—'}</p></div>
-                        <div><b>Open in Stripe</b><p className="linkList">{p.stripe_customer_id && <a target="_blank" href={stripeUrl('customer', p.stripe_customer_id)}>Customer</a>}{p.stripe_payment_intent && <a target="_blank" href={stripeUrl('payment', p.stripe_payment_intent)}>Payment</a>}{p.stripe_session_id && <a target="_blank" href={stripeUrl('session', p.stripe_session_id)}>Checkout</a>}{p.payment_link && <a target="_blank" href={stripeUrl('link', p.payment_link)}>Payment Link</a>}</p></div>
-                        <div className="notesBox"><b>Private Admin Notes</b><textarea className="input" rows="4" value={notes[p.id] ?? p.admin_notes ?? ''} onChange={(e) => setNotes({ ...notes, [p.id]: e.target.value })} placeholder="Add private boutique notes..." /><button className="button secondary mini" onClick={() => saveNote(p.id)}>Save Note</button></div>
+                      <div className="detailsGrid premiumDetailsGrid">
+                        <div className="detailCard">
+                          <span className="detailLabel">📦 Shipping Address</span>
+                          <p>{formatAddress(p.shipping_address)}</p>
+                        </div>
+ 
+                        <div className="detailCard">
+                          <span className="detailLabel">🛍 Order Description</span>
+                          <p>{p.description || 'No description available.'}</p>
+                        </div>
+ 
+                        <div className="detailCard">
+                          <span className="detailLabel">💳 Payment Details</span>
+                          <p>{paymentMethodLabel(p)}</p>
+                          <p className="mutedText">Refund: {p.refund_status || 'none'}</p>
+                        </div>
+ 
+                        <div className="detailCard">
+                          <span className="detailLabel">🔗 Open in Stripe</span>
+                          <div className="stripeButtons">
+                            {p.stripe_customer_id && (
+                              <a className="miniButton" target="_blank" href={stripeUrl('customer', p.stripe_customer_id)}>
+                                Customer
+                              </a>
+                            )}
+                            {p.stripe_payment_intent && (
+                              <a className="miniButton" target="_blank" href={stripeUrl('payment', p.stripe_payment_intent)}>
+                                Payment
+                              </a>
+                            )}
+                            {p.payment_link && (
+                              <a className="miniButton" target="_blank" href={stripeUrl('link', p.payment_link)}>
+                                Payment Link
+                              </a>
+                            )}
+                            {p.receipt_url && (
+                              <a className="miniButton" target="_blank" href={p.receipt_url}>
+                                Receipt
+                              </a>
+                            )}
+                          </div>
+                        </div>
+ 
+                        <div className="notesCard">
+                          <span className="detailLabel">📝 Private Admin Notes</span>
+                          <textarea
+                            className="input notesArea"
+                            rows="5"
+                            value={notes[p.id] ?? p.admin_notes ?? ''}
+                            onChange={(e) => setNotes({ ...notes, [p.id]: e.target.value })}
+                            placeholder="Write anything about this customer here..."
+                          />
+                          <button className="button secondary" onClick={() => saveNote(p.id)}>
+                            💾 Save Notes
+                          </button>
+                        </div>
                       </div>
                     </article>
                   )}
