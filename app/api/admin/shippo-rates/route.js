@@ -10,6 +10,8 @@ const FROM_ADDRESS = {
   state: "CA",
   zip: "92335",
   country: "US",
+  email: "hello@erendirasboutique.com"
+  phone: "9094017221"
 };
 
 function normalizeAddress(address = {}) {
