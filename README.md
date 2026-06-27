@@ -1,197 +1,131 @@
-# Erendira's Boutique Payment Portal
+# Erendira's Boutique Portal
 
-This is a GitHub + Vercel ready Next.js project for:
+GitHub/Vercel-ready Next.js portal for Erendira's Boutique.
 
-- Admin portal: `/admin`
-- Customer portal: `/customer`
-- Stripe Payment Link webhook: `/api/stripe-webhook`
-- Supabase database storage
-- Erendira's Boutique branding, colors, footer, logo placeholder, and font setup
+## What is included
 
-## 1. Upload to GitHub
+- Customer portal at `/`
+- Admin login at `/admin/login`
+- Protected admin dashboard at `/admin`
+- Multiple admin accounts through Supabase Auth
+- Admin roles: `owner`, `admin`, `staff`
+- English/Spanish language selector
+- Stripe Payment Link webhook at `/api/stripe-webhook`
+- Supabase database SQL in `sql/setup.sql`
+- Erendira's Boutique logo, favicon, purple/green accents, flowers, and font placeholders
 
-Unzip this folder, then upload/push the full folder to a new GitHub repo.
+## Important font note
 
-## 2. Create the Supabase table
-
-In Supabase, go to **SQL Editor** and run:
-
-```sql
-sql/setup.sql
-```
-
-Or copy/paste the SQL from that file.
-
-## 3. Add environment variables in Vercel
-
-In Vercel, go to your project:
-
-**Settings → Environment Variables**
-
-Add these:
+Put your real font files here:
 
 ```txt
-STRIPE_SECRET_KEY=sk_live_or_test_key
-STRIPE_WEBHOOK_SECRET=whsec_from_stripe_webhook
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-ADMIN_PASSWORD=make-your-own-password
-ADMIN_SESSION_SECRET=make-a-long-random-secret
-```
-
-Never put real secrets directly in GitHub.
-
-## 4. Stripe webhook setup
-
-In Stripe:
-
-**Developers → Webhooks → Add endpoint**
-
-Endpoint URL:
-
-```txt
-https://your-vercel-domain.vercel.app/api/stripe-webhook
-```
-
-Event to select:
-
-```txt
-checkout.session.completed
-```
-
-Copy the webhook signing secret that starts with `whsec_` and put it into Vercel as:
-
-```txt
-STRIPE_WEBHOOK_SECRET
-```
-
-Redeploy Vercel after adding environment variables.
-
-## 5. Customer login setup in Supabase
-
-In Supabase:
-
-**Authentication → URL Configuration**
-
-Add your site URL:
-
-```txt
-https://your-vercel-domain.vercel.app
-```
-
-Add redirect URL:
-
-```txt
-https://your-vercel-domain.vercel.app/customer
-```
-
-Customers will enter their email, get a magic login link, and only see payments matching that logged-in email.
-
-## 6. Fonts
-
-Put your real font files into:
-
-```txt
-public/fonts
-```
-
-The project already looks for:
-
-```txt
-MDNichrome-Bold.woff2
-MDNichrome-Bold.woff
-MDNichrome-Bold.ttf
-BringBoldNineties.woff2
-BringBoldNineties.woff
-BringBoldNineties.ttf
-```
-
-If the exact files are missing, the site falls back to Arial.
-
-## 7. Branding edits
-
-Main styling is here:
-
-```txt
-app/globals.css
-```
-
-Logo placeholder is here:
-
-```txt
-public/logo.svg
-```
-
-Replace it with your real `logo.png` if you want, then update image paths from `/logo.svg` to `/logo.png` in:
-
-```txt
-components/Header.js
-components/Footer.js
-```
-
-## Important security note
-
-The customer portal does not allow someone to simply type an email and view payments. It requires a Supabase email login link first.
-
-The admin portal is password protected using your Vercel environment variables.
-
-## Branding files
-
-This project is now wired for the Erendira's Boutique visual style:
-
-- Headings: `BringBoldNineties`
-- Paragraphs/buttons/nav/forms/tables: `MDNichrome-Bold`
-- Colors: purple base with green accents
-- Decorative flowers: `public/flowers/`
-- Logo path used by the portal: `public/logo.png`
-- Favicon path: `public/favicon.svg`
-
-To use your exact boutique assets, replace these files but keep the names the same:
-
-```txt
-public/logo.png
-public/favicon.svg
 public/fonts/BringBoldNineties.woff2
 public/fonts/MDNichrome-Bold.woff2
 ```
 
-Do not upload your Stripe secret key or Supabase service role key into GitHub. Add them only inside Vercel Environment Variables.
+The CSS already looks for those names. If the file names are different, rename them to exactly those names.
 
-## Customer homepage + magic link redirect fix
+## 1. Upload to GitHub
 
-The public homepage `/` is now the customer payment portal. Customers will not see an Admin button or Admin Dashboard link anywhere on the customer-facing pages.
+Upload everything in this folder to a new GitHub repository.
 
-Your admin portal is still available only by manually typing:
+## 2. Deploy on Vercel
+
+Import the GitHub repository into Vercel.
+
+Add these environment variables in Vercel:
 
 ```txt
-/admin/login
+SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_SITE_URL=https://your-vercel-site.vercel.app
+STRIPE_SECRET_KEY=sk_live_or_test_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
 
-If Supabase login emails open `localhost`, fix this in Supabase:
+Then redeploy.
 
-1. Go to **Supabase Dashboard**.
-2. Open your project.
-3. Go to **Authentication → URL Configuration**.
-4. Set **Site URL** to your real Vercel site, for example:
+## 3. Supabase setup
+
+In Supabase, go to SQL Editor and run:
+
+```txt
+sql/setup.sql
+```
+
+## 4. Create admin users
+
+Go to:
+
+```txt
+Supabase → Authentication → Users → Add user
+```
+
+Create each admin with their email and password.
+
+Then go to SQL Editor and add that same email to the `admins` table:
+
+```sql
+insert into admins (email, role)
+values ('your-email@example.com', 'owner');
+```
+
+More examples:
+
+```sql
+insert into admins (email, role) values ('erendira@example.com', 'admin');
+insert into admins (email, role) values ('staff@example.com', 'staff');
+```
+
+Only emails listed in the `admins` table can access `/admin`.
+
+## 5. Customer magic link setup
+
+In Supabase, go to:
+
+```txt
+Authentication → URL Configuration
+```
+
+Set Site URL:
 
 ```txt
 https://your-vercel-site.vercel.app
 ```
 
-5. Add this under **Redirect URLs**:
+Add Redirect URL:
 
 ```txt
 https://your-vercel-site.vercel.app/*
 ```
 
-6. In Vercel, add this environment variable:
+This fixes the `localhost refused to connect` magic-link error.
+
+## 6. Stripe webhook setup
+
+In Stripe, go to:
 
 ```txt
-NEXT_PUBLIC_SITE_URL=https://your-vercel-site.vercel.app
+Developers → Event destinations → Add destination
 ```
 
-7. Redeploy the project in Vercel.
+Use endpoint:
 
-Do not use `localhost` in Supabase after the portal is deployed.
+```txt
+https://your-vercel-site.vercel.app/api/stripe-webhook
+```
+
+Select event:
+
+```txt
+checkout.session.completed
+```
+
+Copy the signing secret that starts with `whsec_` and put it in Vercel as:
+
+```txt
+STRIPE_WEBHOOK_SECRET
+```
+
+Then redeploy Vercel.

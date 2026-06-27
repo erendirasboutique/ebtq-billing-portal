@@ -1,6 +1,6 @@
 @font-face {
   font-family: "BringBoldNineties";
-  src: url("/fonts/bringbold_nineties_regular.otf") format("woff2"),
+  src: url("/fonts/BringBoldNineties.woff2") format("woff2"),
        url("/fonts/BringBoldNineties.woff") format("woff"),
        url("/fonts/BringBoldNineties.ttf") format("truetype");
   font-weight: 700;
@@ -10,7 +10,7 @@
 
 @font-face {
   font-family: "MDNichromeBold";
-  src: url("/fonts/MDNichrome-Bold.otf") format("woff2"),
+  src: url("/fonts/MDNichrome-Bold.woff2") format("woff2"),
        url("/fonts/MDNichrome-Bold.woff") format("woff"),
        url("/fonts/MDNichrome-Bold.ttf") format("truetype");
   font-weight: 700;
@@ -214,4 +214,85 @@ td { color: var(--ink); }
   .grid { grid-template-columns: 1fr; }
   .brand img { width: 58px; height: 58px; }
   .pageShell { background-size: 96px, 86px, auto, auto, auto; }
+}
+
+.lang-es { display: none; }
+html[data-lang="es"] .lang-en { display: none; }
+html[data-lang="es"] .lang-es { display: inline; }
+html[data-lang="es"] .brandText .lang-es,
+html[data-lang="es"] p.lang-es { display: block; }
+
+.languageSelector {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 2px solid var(--brand-green);
+  border-radius: 999px;
+  background: var(--ivory);
+  padding: 4px;
+  box-shadow: 0 5px 0 rgba(124, 166, 75, .16);
+}
+.languageSelector button {
+  border: 0;
+  background: transparent;
+  color: var(--brand-green);
+  border-radius: 999px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 900;
+}
+.languageSelector button.active {
+  background: var(--brand-green);
+  color: var(--ivory);
+}
+
+.adminTopbar,
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dashboardGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.searchInput { max-width: 420px; }
+.smallButton { width: auto; min-width: 150px; }
+.loginCard { max-width: 740px; margin: 0 auto; }
+.adminCard { position: relative; }
+.adminCard::before {
+  content: "";
+  position: absolute;
+  right: 34px;
+  top: 34px;
+  width: 76px;
+  height: 76px;
+  background: url("/flowers/flower-purple.svg") center / contain no-repeat;
+  opacity: .55;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .dashboardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .dashboardGrid { grid-template-columns: 1fr; }
+  .toolbar, .adminTopbar { align-items: stretch; }
+  .searchInput, .smallButton { width: 100%; max-width: none; }
+}
+.adminActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.adminIdentity {
+  border: 2px solid var(--brand-green);
+  border-radius: 999px;
+  padding: 9px 13px;
+  background: var(--ivory);
+  color: var(--brand-purple);
+  font-size: .82rem;
 }

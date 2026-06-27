@@ -1,3 +1,5 @@
+import LanguageSelector from "@/components/LanguageSelector";
+
 export default function Header() {
   return (
     <header className="header customerOnlyHeader">
@@ -5,10 +7,18 @@ export default function Header() {
         <img src="/logo.png" alt="Erendira's Boutique" />
         <span className="brandText">
           <strong>Erendira&apos;s Boutique</strong>
+          <span>
+            <span className="lang-en">Ships every Saturday</span>
+            <span className="lang-es">Envios cada Sábado</span>
+          </span>
         </span>
       </a>
       <nav className="nav">
-        <a className="primary" href="https://www.erendirasboutique.com/shop" target="_blank" rel="noreferrer">Shop</a>
+        <LanguageSelector />
+        <a className="primary" href="https://www.erendirasboutique.com/shop" target="_blank" rel="noreferrer">
+          <span className="lang-en">Shop</span>
+          <span className="lang-es">Comprar</span>
+        </a>
       </nav>
     </header>
   );

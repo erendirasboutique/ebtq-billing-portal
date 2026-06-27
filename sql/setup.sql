@@ -17,8 +17,22 @@ create table if not exists payments (
 create index if not exists payments_customer_email_idx on payments (customer_email);
 create index if not exists payments_created_at_idx on payments (created_at desc);
 
--- Optional safety policies if you ever query from the browser directly.
-alter table payments enable row level security;
+create table if not exists admins (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  role text not null default 'staff' check (role in ('owner', 'admin', 'staff')),
+  active boolean not null default true,
+  language text not null default 'en' check (language in ('en', 'es')),
+  created_at timestamp with time zone default now()
+);
 
--- This app reads payments through server API routes using the Supabase service role key.
--- Do not expose SUPABASE_SERVICE_ROLE_KEY in client-side code.
+create index if not exists admins_email_idx on admins (email);
+
+alter table payments enable row level security;
+alter table admins enable row level security;
+
+-- This app reads private data only through server routes with SUPABASE_SERVICE_ROLE_KEY.
+-- Do not expose SUPABASE_SERVICE_ROLE_KEY in browser code.
+
+-- After creating each admin in Supabase Authentication, add their email here:
+-- insert into admins (email, role) values ('your-email@example.com', 'owner');
