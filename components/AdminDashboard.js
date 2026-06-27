@@ -214,7 +214,19 @@ export default function AdminDashboard({ payments, admin }) {
               <button className="button secondary" onClick={exportCsv}>{t.export}</button>
               <button className="button ghost" onClick={() => window.print()}>🖨 Print</button>
             </div>
- 
+ <div className="detailCard">
+  <span className="detailLabel">📦 Shipping Label</span>
+
+  {p.label_url ? (
+    <p>
+      <a href={p.label_url} target="_blank">Print Label</a>
+      <br />
+      Tracking: {p.tracking_number || "—"}
+    </p>
+  ) : (
+    <p>No label created yet.</p>
+  )}
+</div>
             {noteStatus && <div className="notice no-print">{noteStatus}</div>}
  
             <div className="paymentList adminPaymentList">
