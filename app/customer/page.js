@@ -57,7 +57,7 @@ export default function CustomerPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/customer`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/`,
       },
     });
 
@@ -87,7 +87,7 @@ export default function CustomerPage() {
 
   async function logout() {
     if (supabase) await supabase.auth.signOut();
-    window.location.href = "/customer";
+    window.location.href = "/";
   }
 
   if (loading) {

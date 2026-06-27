@@ -1,6 +1,6 @@
 @font-face {
   font-family: "BringBoldNineties";
-  src: url("/fonts/bringbold_nineties_regular.otf") format("woff"),
+  src: url("/fonts/BringBoldNineties.woff2") format("woff2"),
        url("/fonts/BringBoldNineties.woff") format("woff"),
        url("/fonts/BringBoldNineties.ttf") format("truetype");
   font-weight: 700;
@@ -10,7 +10,7 @@
 
 @font-face {
   font-family: "MDNichromeBold";
-  src: url("/fonts/MDNichrome-Bold.otf") format("woff"),
+  src: url("/fonts/MDNichrome-Bold.woff2") format("woff2"),
        url("/fonts/MDNichrome-Bold.woff") format("woff"),
        url("/fonts/MDNichrome-Bold.ttf") format("truetype");
   font-weight: 700;

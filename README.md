@@ -158,3 +158,40 @@ public/fonts/MDNichrome-Bold.woff2
 ```
 
 Do not upload your Stripe secret key or Supabase service role key into GitHub. Add them only inside Vercel Environment Variables.
+
+## Customer homepage + magic link redirect fix
+
+The public homepage `/` is now the customer payment portal. Customers will not see an Admin button or Admin Dashboard link anywhere on the customer-facing pages.
+
+Your admin portal is still available only by manually typing:
+
+```txt
+/admin/login
+```
+
+If Supabase login emails open `localhost`, fix this in Supabase:
+
+1. Go to **Supabase Dashboard**.
+2. Open your project.
+3. Go to **Authentication → URL Configuration**.
+4. Set **Site URL** to your real Vercel site, for example:
+
+```txt
+https://your-vercel-site.vercel.app
+```
+
+5. Add this under **Redirect URLs**:
+
+```txt
+https://your-vercel-site.vercel.app/*
+```
+
+6. In Vercel, add this environment variable:
+
+```txt
+NEXT_PUBLIC_SITE_URL=https://your-vercel-site.vercel.app
+```
+
+7. Redeploy the project in Vercel.
+
+Do not use `localhost` in Supabase after the portal is deployed.
