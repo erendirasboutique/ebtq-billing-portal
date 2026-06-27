@@ -1,131 +1,95 @@
-# Erendira's Boutique Portal
+# Erendira's Boutique Billing Portal
 
-GitHub/Vercel-ready Next.js portal for Erendira's Boutique.
+Clean billing-only portal for GitHub + Vercel + Supabase + Stripe.
 
-## What is included
+## Routes
 
-- Customer portal at `/`
-- Admin login at `/admin/login`
-- Protected admin dashboard at `/admin`
-- Multiple admin accounts through Supabase Auth
-- Admin roles: `owner`, `admin`, `staff`
-- English/Spanish language selector
-- Stripe Payment Link webhook at `/api/stripe-webhook`
-- Supabase database SQL in `sql/setup.sql`
-- Erendira's Boutique logo, favicon, purple/green accents, flowers, and font placeholders
+- `/` customer billing portal
+- `/customer` same customer billing portal
+- `/admin/login` admin login
+- `/admin` protected payments dashboard
+- `/api/stripe-webhook` Stripe webhook endpoint
 
-## Important font note
+## Setup
 
-Put your real font files here:
+### 1. Supabase
 
-```txt
-public/fonts/BringBoldNineties.woff2
-public/fonts/MDNichrome-Bold.woff2
-```
+Create a Supabase project, then run `supabase/schema.sql` in SQL Editor.
 
-The CSS already looks for those names. If the file names are different, rename them to exactly those names.
+### 2. Vercel environment variables
 
-## 1. Upload to GitHub
+Add all variables from `.env.example` in Vercel Project Settings → Environment Variables.
 
-Upload everything in this folder to a new GitHub repository.
-
-## 2. Deploy on Vercel
-
-Import the GitHub repository into Vercel.
-
-Add these environment variables in Vercel:
+`NEXT_PUBLIC_SITE_URL` must be your live Vercel URL, for example:
 
 ```txt
-SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-NEXT_PUBLIC_SITE_URL=https://your-vercel-site.vercel.app
-STRIPE_SECRET_KEY=sk_live_or_test_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+https://your-project.vercel.app
 ```
 
-Then redeploy.
+### 3. Supabase Auth URL settings
 
-## 3. Supabase setup
+Supabase → Authentication → URL Configuration:
 
-In Supabase, go to SQL Editor and run:
+Site URL:
 
 ```txt
-sql/setup.sql
+https://your-project.vercel.app
 ```
 
-## 4. Create admin users
-
-Go to:
+Redirect URLs:
 
 ```txt
-Supabase → Authentication → Users → Add user
+https://your-project.vercel.app/*
 ```
 
-Create each admin with their email and password.
+### 4. Create admin users
 
-Then go to SQL Editor and add that same email to the `admins` table:
+Supabase → Authentication → Users → Add User.
 
-```sql
-insert into admins (email, role)
-values ('your-email@example.com', 'owner');
-```
+Turn on Auto Confirm User, set an email and password.
 
-More examples:
+Copy that user's UID.
 
-```sql
-insert into admins (email, role) values ('erendira@example.com', 'admin');
-insert into admins (email, role) values ('staff@example.com', 'staff');
-```
-
-Only emails listed in the `admins` table can access `/admin`.
-
-## 5. Customer magic link setup
-
-In Supabase, go to:
+Then insert into `public.admins`:
 
 ```txt
-Authentication → URL Configuration
+id: copied UID
+email: same email
+role: owner
+language: en
+active: true
 ```
 
-Set Site URL:
+Only users in `public.admins` with `active = true` can access `/admin`.
+
+### 5. Stripe webhook
+
+Stripe → Developers → Event destinations / Webhooks → Add destination.
+
+Endpoint:
 
 ```txt
-https://your-vercel-site.vercel.app
+https://your-project.vercel.app/api/stripe-webhook
 ```
 
-Add Redirect URL:
-
-```txt
-https://your-vercel-site.vercel.app/*
-```
-
-This fixes the `localhost refused to connect` magic-link error.
-
-## 6. Stripe webhook setup
-
-In Stripe, go to:
-
-```txt
-Developers → Event destinations → Add destination
-```
-
-Use endpoint:
-
-```txt
-https://your-vercel-site.vercel.app/api/stripe-webhook
-```
-
-Select event:
+Event:
 
 ```txt
 checkout.session.completed
 ```
 
-Copy the signing secret that starts with `whsec_` and put it in Vercel as:
+Copy the signing secret (`whsec_...`) into Vercel as `STRIPE_WEBHOOK_SECRET`, then redeploy.
 
-```txt
-STRIPE_WEBHOOK_SECRET
-```
+## Branding
 
-Then redeploy Vercel.
+The real logo and favicon are already included:
+
+- `public/logo.png`
+- `public/favicon.png`
+
+Font files are not included. Add your licensed font files here:
+
+- `public/fonts/BringBoldNineties.woff2`
+- `public/fonts/MDNichrome-Bold.woff2`
+
+The CSS already points to those filenames.

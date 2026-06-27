@@ -1,3 +1,2 @@
-import CustomerPage from "./customer/page";
-
-export default CustomerPage;
+import CustomerPortal from '@/components/CustomerPortal';
+export default function HomePage(){ return <CustomerPortal/>; }

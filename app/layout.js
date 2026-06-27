@@ -1,27 +1,15 @@
-import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import './globals.css';
 
 export const metadata = {
-  title: "Erendira's Boutique Portal",
-  description: "Payment portal for Erendira's Boutique",
-  icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/apple-touch-icon.png",
-  },
+  title: "Erendira's Boutique Billing Portal",
+  description: "Customer and admin billing portal for Erendira's Boutique.",
+  icons: { icon: '/favicon.png', apple: '/favicon.png' },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <div className="pageShell">
-          <Header />
-          {children}
-          <Footer />
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
