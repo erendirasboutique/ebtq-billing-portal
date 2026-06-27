@@ -10,11 +10,38 @@ Clean billing-only portal for GitHub + Vercel + Supabase + Stripe.
 - `/admin` protected payments dashboard
 - `/api/stripe-webhook` Stripe webhook endpoint
 
+## What's included
+
+### Customer portal
+- All-time payment history
+- Receipt links
+- Payment method used
+- Billing address
+- Shipping address
+- Payment/order ID
+- English/Spanish language selector
+
+### Admin portal
+- All-time payment history
+- All-time revenue and filtered revenue
+- Total payments, paid orders, customers, latest payment
+- Search by name, email, phone, status, address, Stripe ID, etc.
+- Filter by status/refund status
+- Filter by date range
+- CSV export with full payment details
+- Payment method, phone, billing address, shipping address
+- Stripe customer ID, payment intent ID, checkout session ID, payment link ID
+- Open in Stripe links
+- Customer lifetime total
+- Private admin notes
+
 ## Setup
 
 ### 1. Supabase
 
 Create a Supabase project, then run `supabase/schema.sql` in SQL Editor.
+
+If your project already exists, still run the same file. It uses safe `if not exists` migrations for the new columns.
 
 ### 2. Vercel environment variables
 
@@ -79,6 +106,17 @@ checkout.session.completed
 ```
 
 Copy the signing secret (`whsec_...`) into Vercel as `STRIPE_WEBHOOK_SECRET`, then redeploy.
+
+## Important after updating
+
+After uploading this version:
+
+1. Run `supabase/schema.sql` again in Supabase SQL Editor.
+2. Commit/push to GitHub.
+3. Redeploy Vercel.
+4. In Stripe, resend a recent successful `checkout.session.completed` webhook if you want the new fields to backfill for that payment.
+
+Older rows may not have payment method/address fields until the webhook is resent or a new payment comes in.
 
 ## Branding
 
