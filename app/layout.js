@@ -5,6 +5,11 @@ import Footer from "@/components/Footer";
 export const metadata = {
   title: "Erendira's Boutique Portal",
   description: "Payment portal for Erendira's Boutique",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {

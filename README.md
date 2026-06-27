@@ -136,3 +136,25 @@ components/Footer.js
 The customer portal does not allow someone to simply type an email and view payments. It requires a Supabase email login link first.
 
 The admin portal is password protected using your Vercel environment variables.
+
+## Branding files
+
+This project is now wired for the Erendira's Boutique visual style:
+
+- Headings: `BringBoldNineties`
+- Paragraphs/buttons/nav/forms/tables: `MDNichrome-Bold`
+- Colors: purple base with green accents
+- Decorative flowers: `public/flowers/`
+- Logo path used by the portal: `public/logo.png`
+- Favicon path: `public/favicon.svg`
+
+To use your exact boutique assets, replace these files but keep the names the same:
+
+```txt
+public/logo.png
+public/favicon.svg
+public/fonts/BringBoldNineties.woff2
+public/fonts/MDNichrome-Bold.woff2
+```
+
+Do not upload your Stripe secret key or Supabase service role key into GitHub. Add them only inside Vercel Environment Variables.

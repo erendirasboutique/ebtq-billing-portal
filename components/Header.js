@@ -2,7 +2,7 @@ export default function Header() {
   return (
     <header className="header">
       <a className="brand" href="/">
-        <img src="/logo.svg" alt="Erendira's Boutique" />
+        <img src="/logo.png" alt="Erendira's Boutique" />
         <span className="brandText">
           <strong>Erendira&apos;s Boutique</strong>
           <span>Envios cada Sábado</span>

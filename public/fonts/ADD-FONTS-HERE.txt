@@ -1,13 +1,13 @@
-Put your font files here.
+Add your font files here with these exact names for best results:
 
-Supported names already coded in app/globals.css:
+BringBoldNineties.woff2
+MDNichrome-Bold.woff2
 
-1. MDNichrome-Bold.woff2
-   or MDNichrome-Bold.woff
-   or MDNichrome-Bold.ttf
+Fallbacks are also supported:
+BringBoldNineties.woff
+BringBoldNineties.ttf
+MDNichrome-Bold.woff
+MDNichrome-Bold.ttf
 
-2. BringBoldNineties.woff2
-   or BringBoldNineties.woff
-   or BringBoldNineties.ttf
-
-Do not rename the files unless you also update app/globals.css.
+Headings use BringBold Nineties.
+Paragraphs, buttons, forms, tables, and nav use MDNichrome-Bold.
