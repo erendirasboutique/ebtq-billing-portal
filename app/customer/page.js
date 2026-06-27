@@ -30,6 +30,11 @@ export default function CustomerPage() {
   const supabase = getSupabaseBrowser();
 
   useEffect(() => {
+    if (!supabase) {
+      setMessage("Supabase public environment variables are missing. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.");
+      setLoading(false);
+      return;
+    }
     async function load() {
       const { data } = await supabase.auth.getUser();
       setUser(data.user || null);
@@ -43,6 +48,11 @@ export default function CustomerPage() {
   async function sendMagicLink(event) {
     event.preventDefault();
     setMessage("");
+
+    if (!supabase) {
+      setMessage("Supabase public environment variables are missing.");
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -60,6 +70,8 @@ export default function CustomerPage() {
   }
 
   async function loadPayments() {
+    if (!supabase) return;
+
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
 
@@ -74,7 +86,7 @@ export default function CustomerPage() {
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     window.location.href = "/customer";
   }
 
