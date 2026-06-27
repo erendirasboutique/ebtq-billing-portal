@@ -130,7 +130,20 @@ textarea {
   font-weight: 700;
   transition: 0.2s ease;
 }
- 
+ button,
+button *,
+.button,
+.button *,
+.miniButton,
+.miniButton *,
+.cardActions button,
+.filters button,
+.side-links button,
+.side-links a,
+.stripeButtons a {
+  font-family: "MDNichrome-Bold", sans-serif !important;
+  letter-spacing: 0.02em;
+}
 .miniButton:hover {
   background: #dcefd4;
   transform: translateY(-1px);
