@@ -5,7 +5,6 @@ export default function Header() {
         <img src="/logo.png" alt="Erendira's Boutique" />
         <span className="brandText">
           <strong>Erendira&apos;s Boutique</strong>
-          <span>Envios cada Sábado</span>
         </span>
       </a>
       <nav className="nav">
