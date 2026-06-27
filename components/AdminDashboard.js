@@ -224,7 +224,8 @@ export default function AdminDashboard({ payments, admin }) {
       return;
     }
 
-    setShippoStatus('Shipping label created. Refresh the page to see it saved.');
+    setShippoStatus(`Label created. ${data.labelUrl ? 'Open the label from the payment card.' : 'Refresh the page.'}`);
+window.location.reload();
     setTimeout(() => setShippoStatus(''), 4000);
 
     if (data.labelUrl) {
