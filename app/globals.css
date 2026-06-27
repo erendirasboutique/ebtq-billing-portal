@@ -44,7 +44,80 @@
   flex-wrap: wrap;
   gap: 10px;
 }
- 
+ button,
+.button,
+.miniButton,
+input,
+select,
+textarea {
+  font-family: "MDNichrome-Bold", sans-serif !important;
+}
+
+.adminPaymentCard {
+  padding: 16px !important;
+  border-radius: 18px !important;
+  margin-bottom: 14px !important;
+}
+
+.paymentHeader {
+  gap: 14px;
+}
+
+.paymentHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.paymentHeader p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.quickDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.quickDetails div {
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.quickDetails b {
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.quickDetails p {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.button.mini,
+.miniButton {
+  padding: 7px 12px !important;
+  font-size: 0.78rem !important;
+  border-radius: 999px;
+}
+
+.cardActions {
+  margin-top: 10px !important;
+}
+
+.detailsGrid,
+.premiumDetailsGrid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.detailCard,
+.notesCard {
+  padding: 16px !important;
+  border-radius: 18px !important;
+}
 .miniButton {
   display: inline-flex;
   align-items: center;
