@@ -1,6 +1,6 @@
 @font-face {
   font-family: "BringBoldNineties";
-  src: url("/fonts/bringbold_nineties_regular.otf") format("woff2"),
+  src: url("/fonts/bringbold_nineties_regular.otf") format("otf"),
        url("/fonts/BringBoldNineties.woff") format("woff"),
        url("/fonts/BringBoldNineties.ttf") format("truetype");
   font-weight: 700;
