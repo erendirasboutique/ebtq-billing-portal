@@ -32,7 +32,7 @@ export async function POST(req) {
 
     const status = String(transaction.object_status || transaction.status || "").toUpperCase();
 
-    if (!response.ok || (status && status !== "SUCCESS")) {
+   if (!response.ok) {
       return NextResponse.json(
         {
           error: "Shippo could not purchase the label.",
@@ -48,7 +48,17 @@ export async function POST(req) {
       transaction.label_url_pdf ||
       transaction.label_url_png ||
       null;
+if (!labelUrl) {
+  console.error("Shippo transaction without label URL:", transaction);
 
+  return NextResponse.json(
+    {
+      error: "Shippo created a transaction, but no label URL was returned.",
+      details: transaction,
+    },
+    { status: 500 }
+  );
+}
     const trackingUrl =
       transaction.tracking_url_provider ||
       transaction.tracking_url ||
