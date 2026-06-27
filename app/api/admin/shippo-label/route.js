@@ -8,11 +8,17 @@ export async function POST(req) {
     const { paymentId, rateId, packageWeight } = await req.json();
 
     if (!process.env.SHIPPO_API_TOKEN) {
-      return NextResponse.json({ error: "Missing SHIPPO_API_TOKEN." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing SHIPPO_API_TOKEN." },
+        { status: 500 }
+      );
     }
 
     if (!paymentId || !rateId) {
-      return NextResponse.json({ error: "paymentId and rateId are required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "paymentId and rateId are required." },
+        { status: 400 }
+      );
     }
 
     const response = await fetch(`${SHIPPO_API_URL}/transactions/`, {
@@ -32,14 +38,17 @@ export async function POST(req) {
 
     if (!response.ok || transaction.object_status !== "SUCCESS") {
       return NextResponse.json(
-        { error: "Shippo could not purchase the label.", details: transaction },
+        {
+          error: "Shippo could not purchase the label.",
+          details: transaction,
+        },
         { status: 500 }
       );
     }
 
     const supabase = getSupabaseAdmin();
 
-    const { error } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from("payments")
       .update({
         shippo_transaction_id: transaction.object_id,
@@ -47,15 +56,38 @@ export async function POST(req) {
         tracking_number: transaction.tracking_number,
         tracking_url: transaction.tracking_url_provider,
         carrier: transaction.rate?.provider || transaction.carrier || null,
-        service_level: transaction.rate?.servicelevel?.name || transaction.servicelevel_name || null,
+        service_level:
+          transaction.rate?.servicelevel?.name ||
+          transaction.servicelevel_name ||
+          null,
         package_weight: packageWeight || null,
       })
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .select("id, label_url, tracking_number, tracking_url");
 
-    if (error) {
+    if (updateError) {
       return NextResponse.json(
-        { error: "Label created, but Supabase did not save it.", details: error.message },
+        {
+          error: "Label created, but Supabase did not save it.",
+          details: updateError.message,
+          labelUrl: transaction.label_url,
+          trackingNumber: transaction.tracking_number,
+          trackingUrl: transaction.tracking_url_provider,
+        },
         { status: 500 }
+      );
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json(
+        {
+          error: "Label created, but no matching payment row was found in Supabase.",
+          paymentId,
+          labelUrl: transaction.label_url,
+          trackingNumber: transaction.tracking_number,
+          trackingUrl: transaction.tracking_url_provider,
+        },
+        { status: 404 }
       );
     }
 
@@ -64,8 +96,12 @@ export async function POST(req) {
       labelUrl: transaction.label_url,
       trackingNumber: transaction.tracking_number,
       trackingUrl: transaction.tracking_url_provider,
+      updatedPayment: updatedRows[0],
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
