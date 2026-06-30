@@ -9,7 +9,6 @@ create table if not exists public.admins (
 
 create table if not exists public.payments (
   id uuid default gen_random_uuid() primary key,
-
   payment_source text default 'stripe',
 
   stripe_session_id text unique,
@@ -26,11 +25,10 @@ create table if not exists public.payments (
   customer_email text,
   customer_phone text,
 
-  amount_total numeric,
+  amount_total numeric default 0,
   currency text default 'usd',
   payment_status text,
   refund_status text default 'none',
-
   payment_method text,
   payment_method_brand text,
   payment_method_last4 text,
@@ -40,7 +38,6 @@ create table if not exists public.payments (
   description text,
   receipt_url text,
   admin_notes text,
-
   raw jsonb,
   created_at timestamptz default now()
 );
@@ -48,5 +45,5 @@ create table if not exists public.payments (
 alter table public.admins enable row level security;
 alter table public.payments enable row level security;
 
--- This portal reads/writes through server routes using the Supabase service role key.
--- Do not expose SUPABASE_SERVICE_ROLE_KEY in client code.
+create unique index if not exists payments_stripe_session_id_key on public.payments (stripe_session_id);
+create unique index if not exists payments_clover_payment_id_key on public.payments (clover_payment_id);
