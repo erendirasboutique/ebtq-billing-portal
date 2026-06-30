@@ -1,199 +1,56 @@
 'use client';
-
 import { useEffect, useMemo, useState } from 'react';
-import { getSupabaseBrowser } from '@/lib/supabaseClient';
+import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 import { copy } from '@/lib/i18n';
 import LanguageToggle from './LanguageToggle';
-
-function money(value, currency = 'usd') {
-  return `$${Number(value || 0).toFixed(2)} ${String(currency || 'usd').toUpperCase()}`;
-}
-
-function formatPaymentDate(date) {
-  if (!date) return '—';
-
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }).format(new Date(date));
-}
-
-function formatAddress(address) {
-  if (!address) return '—';
-  if (typeof address === 'string') return address || '—';
-
-  const parts = [
-    address.line1,
-    address.line2,
-    [address.city, address.state, address.postal_code].filter(Boolean).join(', '),
-    address.country,
-  ].filter(Boolean);
-
-  return parts.length ? parts.join(' • ') : '—';
-}
-
-function paymentMethodLabel(payment) {
-  if (!payment.payment_method) return '—';
-
-  const type = payment.payment_method.replaceAll('_', ' ');
-  const card =
-    payment.payment_method_brand || payment.payment_method_last4
-      ? ` (${[
-          payment.payment_method_brand,
-          payment.payment_method_last4 ? `•••• ${payment.payment_method_last4}` : '',
-        ]
-          .filter(Boolean)
-          .join(' ')})`
-      : '';
-
-  return `${type}${card}`;
-}
+import { money, formatPaymentDate, paymentMethodLabel, formatAddress } from '@/lib/format';
 
 export default function CustomerPortal() {
-  const [lang, setLang] = useState('en');
-  const t = copy[lang];
-  const supabase = useMemo(() => getSupabaseBrowser(), []);
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [session, setSession] = useState(null);
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [lang,setLang]=useState('en');
+  const [email,setEmail]=useState('');
+  const [session,setSession]=useState(null);
+  const [payments,setPayments]=useState([]);
+  const [status,setStatus]=useState('');
+  const [loading,setLoading]=useState(true);
+  const supabase = getSupabaseBrowser();
+  const t=copy[lang];
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, currentSession) => setSession(currentSession));
-    return () => listener.subscription.unsubscribe();
-  }, [supabase]);
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data})=>{ setSession(data.session); setLoading(false); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess)=>{ setSession(sess); });
+    return ()=>sub.subscription.unsubscribe();
+  },[]);
 
-  useEffect(() => {
-    async function loadPayments() {
-      if (!session?.access_token) return;
-      setLoading(true);
-      const res = await fetch('/api/customer-payments', { headers: { Authorization: `Bearer ${session.access_token}` } });
-      const json = await res.json();
-      if (res.ok) setPayments(json.payments || []);
-      else setError(json.error || 'Could not load payments.');
-      setLoading(false);
+  useEffect(()=>{
+    async function load(){
+      if(!session?.access_token) return;
+      setStatus('Loading payment history...');
+      const res=await fetch('/api/customer-payments',{headers:{Authorization:`Bearer ${session.access_token}`}});
+      const data=await res.json();
+      if(!res.ok){setStatus(data.error || 'Could not load payments.');return;}
+      setPayments(data.payments || []); setStatus('');
     }
-    loadPayments();
-  }, [session]);
+    load();
+  },[session?.access_token]);
 
-  async function sendMagicLink(e) {
+  const name = payments.find(p=>p.customer_name)?.customer_name || session?.user?.email?.split('@')[0] || 'Customer';
+  const total = useMemo(()=>payments.reduce((s,p)=>s+Number(p.amount_total||0),0),[payments]);
+  const last = payments[0]?.created_at ? formatPaymentDate(payments[0].created_at) : '—';
+
+  async function sendMagicLink(e){
     e.preventDefault();
-    setError('');
-    setMessage('');
-    setLoading(true);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${siteUrl}/customer` },
-    });
-    setLoading(false);
-    if (otpError) setError(otpError.message);
-    else setMessage(t.sent);
+    setStatus('Sending secure link...');
+    const { error } = await supabase.auth.signInWithOtp({ email, options:{ emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback` } });
+    setStatus(error ? error.message : t.checkEmail);
   }
 
-  async function logout() {
-    await supabase.auth.signOut();
-    setPayments([]);
+  async function signOut(){ await supabase.auth.signOut(); setSession(null); setPayments([]); }
+
+  if(loading) return <main className="page"><div className="shell"><div className="card">Loading...</div></div></main>;
+
+  if(!session){
+    return <main className="page"><span className="flower one">✿</span><span className="flower two">❀</span><div className="shell"><div className="topbar"><div className="brand"><img src="/logo.png" className="logo" alt="Erendira's Boutique"/><span className="brand-title">Erendira&apos;s Boutique</span></div><LanguageToggle lang={lang} setLang={setLang}/></div><section className="hero"><div className="card loginCard"><p className="eyebrow">Secure billing</p><h1>{t.customerTitle}</h1><p>{t.customerSubtitle}</p><form onSubmit={sendMagicLink}><label className="field">Email address<input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" required/></label><button className="button secondary" type="submit">{t.sendLink}</button></form>{status && <div className="notice">{status}</div>}</div><div className="card brandShowcase"><img src="/logo.png" alt="Erendira's Boutique logo"/></div></section><p className="footer">Payments are matched by the email used at checkout.</p></div></main>;
   }
 
-  const total = payments.reduce((sum, payment) => sum + Number(payment.amount_total || 0), 0);
-  const customerName = payments.find((payment) => payment.customer_name)?.customer_name || session?.user?.email || 'Customer';
-  const latest = payments[0]?.created_at ? formatPaymentDate(payments[0].created_at) : '—';
-
-  return (
-    <main className="page customerPage">
-      <span className="flower one">✿</span>
-      <span className="flower two">❀</span>
-      <div className="shell">
-        <div className="topbar portalTopbar">
-          <div className="brand">
-            <img src="/logo.png" className="logo" alt="Erendira's Boutique" />
-            <div>
-              <div className="brand-title">Erendira&apos;s Boutique</div>
-              <p>{t.portal}</p>
-            </div>
-          </div>
-          <LanguageToggle lang={lang} setLang={setLang} />
-        </div>
-
-        {!session ? (
-          <section className="hero polishedHero">
-            <div className="card loginCard">
-              <p className="eyebrow">Secure Billing Portal</p>
-              <h1>{t.portal}</h1>
-              <p>{t.customerSub}</p>
-              <form onSubmit={sendMagicLink}>
-                <label className="field">
-                  {t.email}
-                  <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@email.com" />
-                </label>
-                <button className="button" disabled={loading}>{loading ? '...' : t.sendLink}</button>
-              </form>
-              {message && <div className="notice">{message}</div>}
-              {error && <div className="notice error">{error}</div>}
-            </div>
-            <div className="card brandShowcase">
-              <img src="/logo.png" alt="Erendira's Boutique logo" />
-              <div className="showcaseBadge">Payments • Receipts • History</div>
-            </div>
-          </section>
-        ) : (
-          <section className="customerDashboard">
-            <div className="customerWelcome card">
-              <div>
-                <p className="eyebrow">Welcome back</p>
-                <h1>{customerName}</h1>
-                <p>Here is your Erendira&apos;s Boutique payment history.</p>
-              </div>
-              <button className="button ghost" onClick={logout}>{t.logout}</button>
-            </div>
-
-            <div className="statsGrid compactStats">
-              <div className="stat highlight"><span>All-Time Total</span><b>{money(total)}</b></div>
-              <div className="stat"><span>Payments</span><b>{payments.length}</b></div>
-              <div className="stat"><span>Latest Payment</span><b>{latest}</b></div>
-            </div>
-
-            {loading && <p>Loading...</p>}
-            {error && <div className="notice error">{error}</div>}
-            {!loading && payments.length === 0 && <div className="card emptyState">{t.noPayments}</div>}
-
-            {payments.length > 0 && (
-              <div className="paymentList">
-                {payments.map((p) => (
-                  <article className="paymentCard customerPaymentCard" key={p.id}>
-                    <div className="paymentHeader">
-                      <div>
-                        <p className="eyebrow">{formatPaymentDate(p.created_at)}</p>
-                        <h3>{money(p.amount_total, p.currency)}</h3>
-                        <p>{p.description || 'Erendira’s Boutique payment'}</p>
-                      </div>
-                      <span className="pill">{p.payment_status}</span>
-                    </div>
-
-                    <div className="detailsGrid customer">
-                      <div><b>Payment Method</b><p>{paymentMethodLabel(p)}</p></div>
-                      <div><b>Shipping Address</b><p>{formatAddress(p.shipping_address)}</p></div>
-                      <div><b>Billing Address</b><p>{formatAddress(p.billing_address)}</p></div>
-                      <div><b>Payment ID</b><p>{p.stripe_payment_intent || p.stripe_session_id || '—'}</p></div>
-                      <div><b>Receipt</b><p>{p.receipt_url ? <a className="button ghost mini" href={p.receipt_url} target="_blank">Receipt</a> : '—'}</p></div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-        <div className="footer">© Erendira&apos;s Boutique</div>
-      </div>
-    </main>
-  );
+  return <main className="page"><span className="flower one no-print">✿</span><span className="flower two no-print">❀</span><div className="shell customerDashboard"><div className="topbar no-print"><div className="brand"><img src="/logo.png" className="logo" alt="Erendira's Boutique"/><span className="brand-title">Erendira&apos;s Boutique</span></div><div style={{display:'flex',gap:10,alignItems:'center'}}><LanguageToggle lang={lang} setLang={setLang}/><button className="button ghost mini" onClick={signOut}>{t.signOut}</button></div></div><section className="customerWelcome card"><div><p className="eyebrow">Welcome back</p><h1>{name} 🌸</h1><p>Thank you for shopping with Erendira&apos;s Boutique. Your payment history, receipts, and order details are below.</p></div><img src="/logo.png" className="logo" alt=""/></section><div className="customerSummary"><div className="stat"><span>Lifetime purchases</span><b>{money(total)}</b></div><div className="stat"><span>Total payments</span><b>{payments.length}</b></div><div className="stat"><span>Last payment</span><b>{last}</b></div></div>{status && <div className="notice">{status}</div>}<section className="paymentList">{payments.map(p=><article className="paymentCard" key={p.id || p.stripe_session_id || p.clover_payment_id}><div className="paymentHeader"><div><p className="eyebrow">{formatPaymentDate(p.created_at)}</p><h3>{money(p.amount_total,p.currency)}</h3><p>{p.description || 'Erendira’s Boutique payment'}</p></div><div className="amountBlock"><span className={`pill source-${p.payment_source || 'stripe'}`}>{p.payment_source || 'stripe'}</span><span className="pill">{p.payment_status || 'paid'}</span></div></div><div className="quickDetails"><div><b>Payment Method</b><p>{paymentMethodLabel(p)}</p></div><div><b>Shipping Address</b><p>{formatAddress(p.shipping_address)}</p></div><div><b>Receipt</b><p>{p.receipt_url?<a href={p.receipt_url} target="_blank" rel="noopener noreferrer">Open Receipt</a>:'—'}</p></div></div></article>)}{payments.length===0 && <div className="emptyState">{t.noPayments}</div>}</section></div></main>;
 }

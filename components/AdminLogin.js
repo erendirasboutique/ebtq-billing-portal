@@ -1,24 +1,18 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getSupabaseBrowser } from '@/lib/supabaseClient';
-import { copy } from '@/lib/i18n';
-import LanguageToggle from './LanguageToggle';
+import { useState } from 'react';
+import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
 export default function AdminLogin(){
-  const [lang,setLang]=useState('en'); const t=copy[lang];
-  const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
-  const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
-  const supabase=useMemo(()=>getSupabaseBrowser(),[]); const router=useRouter();
-  async function submit(e){
-    e.preventDefault(); setError(''); setLoading(true);
-    const {data, error: signError}=await supabase.auth.signInWithPassword({email,password});
-    if(signError || !data.session?.access_token){ setError(t.wrong); setLoading(false); return; }
-    const res=await fetch('/api/admin/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:data.session.access_token})});
-    const json=await res.json().catch(()=>({}));
-    setLoading(false);
-    if(!res.ok){ setError(json.error || t.wrong); return; }
-    router.push('/admin'); router.refresh();
+  const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [message,setMessage]=useState('');
+  async function login(e){
+    e.preventDefault(); setMessage('Signing in...');
+    const supabase=getSupabaseBrowser();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error || !data.session?.access_token){ setMessage('Wrong admin email or password.'); return; }
+    const res=await fetch('/api/admin/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:data.session.access_token})});
+    const json=await res.json();
+    if(!res.ok){ setMessage(json.error || 'This account is not an active admin.'); return; }
+    window.location.href='/admin';
   }
-  return <main className="page"><span className="flower one">✿</span><div className="shell"><div className="topbar"><div className="brand"><img src="/logo.png" className="logo" alt="Erendira's Boutique"/><div><div className="brand-title">Erendira&apos;s Boutique</div><p>{t.adminOnly}</p></div></div><LanguageToggle lang={lang} setLang={setLang}/></div><section className="card" style={{maxWidth:560,margin:'60px auto'}}><h1>{t.adminLogin}</h1><form onSubmit={submit}><label className="field">{t.email}<input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label className="field">{t.password}<input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="button" disabled={loading}>{loading?'...':t.signIn}</button></form>{error&&<div className="notice error">{error}</div>}</section></div></main>
+  return <main className="page"><span className="flower one">✿</span><span className="flower two">❀</span><div className="shell"><section className="hero"><div className="card loginCard"><img src="/logo.png" className="logo" alt="Erendira's Boutique"/><p className="eyebrow">Admin only</p><h1>Billing Studio</h1><p>Sign in to review Stripe and Clover payments, receipts, customers, exports, and private notes.</p><form onSubmit={login}><label className="field">Admin email<input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label className="field">Password<input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="button secondary" type="submit">Sign in</button></form>{message && <div className="notice">{message}</div>}</div><div className="card brandShowcase"><img src="/logo.png" alt="Erendira's Boutique logo"/></div></section></div></main>;
 }

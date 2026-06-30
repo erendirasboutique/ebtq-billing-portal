@@ -1,97 +1,53 @@
-# Erendira's Boutique Billing Portal
+# Erendira's Boutique Billing Portal V2
 
-Clean billing-only portal for GitHub + Vercel + Supabase + Stripe.
+Billing-only portal for Erendira's Boutique.
 
-## Routes
+## Includes
 
-- `/` customer billing portal
-- `/customer` same customer billing portal
-- `/admin/login` admin login
-- `/admin` protected payments dashboard
-- `/api/stripe-webhook` Stripe webhook endpoint
+- Customer portal at `/`
+- Admin portal at `/admin/login`
+- Stripe webhook at `/api/stripe-webhook`
+- Clover manual sync at `/api/admin/clover-sync`
+- Supabase Auth admin login
+- Supabase customer magic-link login
+- Stripe + Clover payments in one `payments` table
+- Receipts, payment method, customer history, notes, CSV export, print view
+- Erendira's Boutique branding with logo/favicon and font paths
 
-## What's included
+## Important
 
-### Customer portal
-- All-time payment history
-- Receipt links
-- Payment method used
-- Billing address
-- Shipping address
-- Payment/order ID
-- English/Spanish language selector
+This project does **not** include shipping, Shippo, Ship.com, inventory, RSVP, or Typeform.
 
-### Admin portal
-- All-time payment history
-- All-time revenue and filtered revenue
-- Total payments, paid orders, customers, latest payment
-- Search by name, email, phone, status, address, Stripe ID, etc.
-- Filter by status/refund status
-- Filter by date range
-- CSV export with full payment details
-- Payment method, phone, billing address, shipping address
-- Stripe customer ID, payment intent ID, checkout session ID, payment link ID
-- Open in Stripe links
-- Customer lifetime total
-- Private admin notes
+## Supabase setup
 
-## Setup
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in SQL Editor.
+3. Create your admin in Authentication → Users.
+4. Copy the user's UID.
+5. Insert the admin row:
 
-### 1. Supabase
-
-Create a Supabase project, then run `supabase/schema.sql` in SQL Editor.
-
-If your project already exists, still run the same file. It uses safe `if not exists` migrations for the new columns.
-
-### 2. Vercel environment variables
-
-Add all variables from `.env.example` in Vercel Project Settings → Environment Variables.
-
-`NEXT_PUBLIC_SITE_URL` must be your live Vercel URL, for example:
-
-```txt
-https://your-project.vercel.app
+```sql
+insert into public.admins (id, email, role, language, active)
+values ('PASTE_AUTH_USER_UID', 'your@email.com', 'owner', 'en', true);
 ```
 
-### 3. Supabase Auth URL settings
-
-Supabase → Authentication → URL Configuration:
-
-Site URL:
+## Vercel environment variables
 
 ```txt
-https://your-project.vercel.app
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=https://your-project.vercel.app
+
+STRIPE_SECRET_KEY=sk_live_or_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+CLOVER_API_TOKEN=
+CLOVER_MERCHANT_ID=
+CLOVER_ENV=production
 ```
 
-Redirect URLs:
-
-```txt
-https://your-project.vercel.app/*
-```
-
-### 4. Create admin users
-
-Supabase → Authentication → Users → Add User.
-
-Turn on Auto Confirm User, set an email and password.
-
-Copy that user's UID.
-
-Then insert into `public.admins`:
-
-```txt
-id: copied UID
-email: same email
-role: owner
-language: en
-active: true
-```
-
-Only users in `public.admins` with `active = true` can access `/admin`.
-
-### 5. Stripe webhook
-
-Stripe → Developers → Event destinations / Webhooks → Add destination.
+## Stripe webhook
 
 Endpoint:
 
@@ -105,43 +61,13 @@ Event:
 checkout.session.completed
 ```
 
-Copy the signing secret (`whsec_...`) into Vercel as `STRIPE_WEBHOOK_SECRET`, then redeploy.
+## Fonts
 
-## Important after updating
+Place your font files here:
 
-After uploading this version:
+```txt
+public/fonts/bringbold_nineties_regular.otf
+public/fonts/MDNichrome-Bold.otf
+```
 
-1. Run `supabase/schema.sql` again in Supabase SQL Editor.
-2. Commit/push to GitHub.
-3. Redeploy Vercel.
-4. In Stripe, resend a recent successful `checkout.session.completed` webhook if you want the new fields to backfill for that payment.
-
-Older rows may not have payment method/address fields until the webhook is resent or a new payment comes in.
-
-## Branding
-
-The real logo and favicon are already included:
-
-- `public/logo.png`
-- `public/favicon.png`
-
-Font files are not included. Add your licensed font files here:
-
-- `public/fonts/BringBoldNineties.woff2`
-- `public/fonts/MDNichrome-Bold.woff2`
-
-The CSS already points to those filenames.
-
-## Polished UI update
-
-This version updates the billing portal UI with:
-
-- Customer welcome message using the saved Stripe customer name
-- California time formatting for payment dates
-- Professional customer payment cards
-- Professional admin dashboard cards instead of a plain table
-- Print Payment History button in the admin portal
-- Cleaner admin notes section inside each expanded payment card
-- Improved mobile layout and print stylesheet
-
-After uploading to GitHub, redeploy on Vercel. Keep your existing Vercel environment variables and Supabase tables.
+The CSS already references those exact file names.
