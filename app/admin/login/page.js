@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
   provider: 'google',
   options: {
-    redirectTo: `${siteUrl}/admin/login`,
+    redirectTo: `${siteUrl}/auth/callback?next=/admin`,
     queryParams: {
       access_type: 'offline',
       prompt: 'consent',
