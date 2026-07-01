@@ -26,7 +26,7 @@ export default function CustomerPortal({ initialUser, initialPayments }) {
     e.preventDefault();
     setMessage('Sending secure login link...');
     const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, "");
-const redirectTo = `${siteUrl}/auth/callback`;
+const redirectTo = siteUrl;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirectTo },
