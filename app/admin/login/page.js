@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
     }
 
     finishGoogleLogin();
-  }, [supabase.auth]);
+  }, []);
 
   async function login(e) {
     e.preventDefault();
