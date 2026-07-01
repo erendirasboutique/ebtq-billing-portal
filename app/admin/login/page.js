@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LanguageToggle from '@/components/LanguageToggle';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
