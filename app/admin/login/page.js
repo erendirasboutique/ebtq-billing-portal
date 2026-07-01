@@ -10,34 +10,39 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   useEffect(() => {
-  async function handleGoogleHash() {
-    const hash = window.location.hash;
+  async function finishGoogleLogin() {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
 
-    if (!hash.includes('access_token=')) return;
+    if (!code) return;
 
     setMessage('Finishing Google sign in...');
 
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const accessToken = params.get('access_token');
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error || !data?.session?.access_token) {
+      setMessage(error?.message || 'Google login failed.');
+      return;
+    }
 
     const res = await fetch('/api/auth/admin-google-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ access_token: accessToken }),
+      body: JSON.stringify({ access_token: data.session.access_token }),
     });
 
-    const data = await res.json();
+    const result = await res.json();
 
     if (!res.ok) {
-      setMessage(data.error || 'Google login failed.');
-      window.history.replaceState(null, '', '/admin/login');
+      setMessage(result.error || 'Google admin login failed.');
       return;
     }
 
+    window.history.replaceState(null, '', '/admin/login');
     window.location.href = '/admin';
   }
 
-  handleGoogleHash();
+  finishGoogleLogin();
 }, []);
 
   const supabase = getSupabaseBrowser();
