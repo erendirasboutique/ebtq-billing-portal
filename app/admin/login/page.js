@@ -9,6 +9,36 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  useEffect(() => {
+  async function handleGoogleHash() {
+    const hash = window.location.hash;
+
+    if (!hash.includes('access_token=')) return;
+
+    setMessage('Finishing Google sign in...');
+
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const accessToken = params.get('access_token');
+
+    const res = await fetch('/api/auth/admin-google-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: accessToken }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMessage(data.error || 'Google login failed.');
+      window.history.replaceState(null, '', '/admin/login');
+      return;
+    }
+
+    window.location.href = '/admin';
+  }
+
+  handleGoogleHash();
+}, []);
 
   const supabase = getSupabaseBrowser();
 
