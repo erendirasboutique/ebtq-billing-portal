@@ -76,15 +76,14 @@ export default function AdminLoginPage() {
     ).replace(/\/$/, '');
 
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/admin/login`,
-        queryParams: {
-          prompt: 'select_account',
-        },
-      },
-    });
-
+  provider: 'google',
+  options: {
+    redirectTo: `${siteUrl}/admin/login`,
+    queryParams: {
+      prompt: 'select_account',
+    },
+  },
+});
     if (error) {
       setMessage(error.message || 'Could not continue with Google.');
     }
