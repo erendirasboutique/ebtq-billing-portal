@@ -62,23 +62,26 @@ export default function AdminLoginPage() {
   }
 
   async function signInWithGoogle() {
-    setMessage('Redirecting to Google...');
+  setMessage('Redirecting to Google...');
 
-    const siteUrl = (
-      process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
-    ).replace(/\/$/, '');
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+  ).replace(/\/$/, '');
 
-    const { error } = await supabase.auth.signInWithOAuth({
-  provider: 'google',
-  options: {
-    redirectTo: `${siteUrl}/admin/login`,
-    skipBrowserRedirect: false,
-    queryParams: {
-      response_type: 'token',
-      prompt: 'select_account',
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${siteUrl}/admin/login`,
+      queryParams: {
+        prompt: 'select_account',
+      },
     },
-  },
-});
+  });
+
+  if (error) {
+    setMessage(error.message || 'Could not continue with Google.');
+  }
+}
     if (error) {
       setMessage(error.message || 'Could not continue with Google.');
     }
