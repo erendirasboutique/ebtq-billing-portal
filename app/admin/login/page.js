@@ -39,13 +39,16 @@ export default function AdminLoginPage() {
       process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
     ).replace(/\/$/, '');
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/admin`,
-      },
-    });
-
+    cconst { error } = await supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: {
+    redirectTo: `${siteUrl}/auth/callback?next=/admin`,
+    queryParams: {
+      access_type: 'offline',
+      prompt: 'consent',
+    },
+  },
+});
     if (error) {
       setMessage(error.message || 'Could not continue with Google.');
     }
