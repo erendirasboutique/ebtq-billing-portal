@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
     ).replace(/\/$/, '');
 
-    cconst { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
   provider: 'google',
   options: {
     redirectTo: `${siteUrl}/auth/callback?next=/admin`,
